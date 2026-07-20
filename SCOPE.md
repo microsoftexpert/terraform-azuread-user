@@ -1,10 +1,10 @@
-# SCOPE — tf-mod-azuread-user
+# SCOPE — terraform-azuread-user
 
 ## In scope
 - `azuread_user.this` — one cloud-only Entra ID user account
 
 ## Out of scope (consumed/owned elsewhere)
-- Guest / B2B users → `tf-mod-azuread-invitation`
+- Guest / B2B users → `terraform-azuread-invitation`
 - On-premises-synced (hybrid) users → owned by Azure AD Connect / Entra Cloud Sync
 - Group membership, administrative-unit membership/role scoping, directory-role assignment, access-package requestor/approver association → consume this module's `object_id`
 
@@ -34,7 +34,7 @@
 ## Emits
 | Output | Description | Typically consumed by |
 |---|---|---|
-| `object_id` | Object ID of `azuread_user` | **Primary key** — `tf-mod-azuread-group` (`members[*].member_object_id`), `tf-mod-azuread-administrative-unit` (`members[*].member_object_id` / `role_members[*].member_object_id`), `tf-mod-azuread-directory-role` / `tf-mod-azuread-pim-group` (principal), `tf-mod-azuread-access-package` (requestor/approver `singleUser` reference), another user's `manager_id` |
+| `object_id` | Object ID of `azuread_user` | **Primary key** — `terraform-azuread-group` (`members[*].member_object_id`), `terraform-azuread-administrative-unit` (`members[*].member_object_id` / `role_members[*].member_object_id`), `terraform-azuread-directory-role` / `terraform-azuread-pim-group` (principal), `terraform-azuread-access-package` (requestor/approver `singleUser` reference), another user's `manager_id` |
 | `id` | Fully-qualified Graph ID (`/users/<object_id>`) | Direct Graph references, import |
 | `user_principal_name` | UPN (primary sign-in identifier) | External system config, mail routing, audit |
 | `display_name` | Address-book display name | Logging, drift reports |

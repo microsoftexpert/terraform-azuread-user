@@ -35,15 +35,15 @@ Whether it's a star, a professional connection, or a coffee, every gesture helps
 
 ## 🗺️ Where this fits in the family
 
-This module is a foundational identity module — it consumes no other `tf-mod-azuread-*` module's outputs (every attribute is a flat, caller-supplied value), and creates a **cloud-only** user distinct from `tf-mod-azuread-invitation`'s B2B guests. Per SCOPE.md, its `object_id` is the primary key consumed by every module that grants group membership, administrative-unit scoping, directory-role assignment, or entitlement access.
+This module is a foundational identity module — it consumes no other `terraform-azuread-*` module's outputs (every attribute is a flat, caller-supplied value), and creates a **cloud-only** user distinct from `terraform-azuread-invitation`'s B2B guests. Per SCOPE.md, its `object_id` is the primary key consumed by every module that grants group membership, administrative-unit scoping, directory-role assignment, or entitlement access.
 
 ```mermaid
 flowchart LR
- THIS["tf-mod-azuread-user<br/>(THIS MODULE)"]
- GROUP["tf-mod-azuread-group"]
- AU["tf-mod-azuread-administrative-unit"]
- ROLE["tf-mod-azuread-directory-role /<br/>tf-mod-azuread-pim-group"]
- PKG["tf-mod-azuread-access-package"]
+ THIS["terraform-azuread-user<br/>(THIS MODULE)"]
+ GROUP["terraform-azuread-group"]
+ AU["terraform-azuread-administrative-unit"]
+ ROLE["terraform-azuread-directory-role /<br/>terraform-azuread-pim-group"]
+ PKG["terraform-azuread-access-package"]
 
  THIS -->|"object_id"| GROUP
  THIS -->|"object_id"| AU
@@ -53,7 +53,7 @@ flowchart LR
  style THIS fill:#8957E5,color:#fff
 ```
 
-This module **consumes** no other module's outputs — every attribute is flat, caller-supplied configuration; it **emits** `object_id`, the primary key consumed by `tf-mod-azuread-group`, `tf-mod-azuread-administrative-unit`, `tf-mod-azuread-directory-role`, `tf-mod-azuread-pim-group`, `tf-mod-azuread-access-package`, and other users' `manager_id` — see the Emits table in [SCOPE.md](./SCOPE.md).
+This module **consumes** no other module's outputs — every attribute is flat, caller-supplied configuration; it **emits** `object_id`, the primary key consumed by `terraform-azuread-group`, `terraform-azuread-administrative-unit`, `terraform-azuread-directory-role`, `terraform-azuread-pim-group`, `terraform-azuread-access-package`, and other users' `manager_id` — see the Emits table in [SCOPE.md](./SCOPE.md).
 
 ---
 
@@ -63,7 +63,7 @@ A single resource with no nested collections — every one of `azuread_user`'s f
 
 ```mermaid
 flowchart TD
- subgraph mod["tf-mod-azuread-user"]
+ subgraph mod["terraform-azuread-user"]
  THIS["azuread_user.this<br/>(keystone)<br/>cloud-only Entra ID user account"]
  end
 
@@ -75,7 +75,7 @@ flowchart TD
 ## 📁 Module Structure
 
 ```
-tf-mod-azuread-user/
+terraform-azuread-user/
 ├── providers.tf # azuread >= 2.0, < 4.0; terraform >= 1.12.0; no provider{} block
 ├── variables.tf # display_name, user_principal_name, password (sensitive), account controls,
 │ # mail/naming, enums, org profile, contact, address, locale, timeouts
@@ -91,7 +91,7 @@ tf-mod-azuread-user/
 
 ```hcl
 module "svc_user" {
-  source = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
 
   display_name        = "Batch Service Account"
   user_principal_name = "svc-batch@financialpartners.com"
@@ -126,15 +126,15 @@ Derived from this module's `outputs.tf` and the `SCOPE.md` Emits table. Primary 
 
 | This module output | Feeds into |
 |---|---|
-| `object_id` | `tf-mod-azuread-group` → `members[*].member_object_id`; `tf-mod-azuread-administrative-unit` → `members[*].member_object_id` / `role_members[*].member_object_id`; `tf-mod-azuread-directory-role` → assignment `principal_object_id`; another `tf-mod-azuread-user` → `manager_id` |
-| `object_id` | `tf-mod-azuread-pim-group` → `principal_id` for eligible/active assignments |
-| `object_id` | `tf-mod-azuread-access-package` → `assignment_policies[*].requestor_settings.requestor[*].object_id` / `approval_settings.approval_stage[*].primary_approver[*].object_id` (subject_type `singleUser`) |
+| `object_id` | `terraform-azuread-group` → `members[*].member_object_id`; `terraform-azuread-administrative-unit` → `members[*].member_object_id` / `role_members[*].member_object_id`; `terraform-azuread-directory-role` → assignment `principal_object_id`; another `terraform-azuread-user` → `manager_id` |
+| `object_id` | `terraform-azuread-pim-group` → `principal_id` for eligible/active assignments |
+| `object_id` | `terraform-azuread-access-package` → `assignment_policies[*].requestor_settings.requestor[*].object_id` / `approval_settings.approval_stage[*].primary_approver[*].object_id` (subject_type `singleUser`) |
 | `user_principal_name` | External system configuration, mail routing, audit logging |
 | `mail` | Distribution-list and notification wiring (computed when not explicitly set) |
 
 ```hcl
 module "analyst" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Dana Analyst"
   user_principal_name = "dana.analyst@financialpartners.com"
   password            = var.dana_initial_password
@@ -142,7 +142,7 @@ module "analyst" {
 }
 
 module "credit_analysts" {
-  source       = "git::https://github.com/microsoftexpert/tf-mod-azuread-group?ref=v1.0.0"
+  source       = "git::https://github.com/microsoftexpert/terraform-azuread-group?ref=v1.0.0"
   display_name = "Credit Analysts"
   members = {
     dana = { member_object_id = module.analyst.object_id } # ← user object_id feeds group membership
@@ -161,7 +161,7 @@ module "credit_analysts" {
 - **`usage_location` is set-once-meaningful and required for licensing.** Set it at creation for any user who will receive a license — group-based licensing **never** modifies an existing `usage_location`, and the attribute cannot be cleared back to null once set (it can be changed to another country code).
 - **`mail` cannot be unset once specified.** Leave it null to let Exchange/Graph manage it; once set, it can be changed but not cleared.
 - **`business_phones` accepts at most one number** — a Graph constraint, enforced by a `validation {}` block in this module.
-- **Cloud-only scope.** This module manages only cloud-native `azuread_user` resources — it does not manage on-premises-synced (hybrid) users (owned by Azure AD Connect / Entra Cloud Sync), and it does not create **guest (B2B) users** (those come from `tf-mod-azuread-invitation`).
+- **Cloud-only scope.** This module manages only cloud-native `azuread_user` resources — it does not manage on-premises-synced (hybrid) users (owned by Azure AD Connect / Entra Cloud Sync), and it does not create **guest (B2B) users** (those come from `terraform-azuread-invitation`).
 - **Eventual consistency.** A freshly created user replicates across Entra within seconds, but downstream resources that reference `object_id` (group membership, role assignment) can intermittently hit a "resource not found" race immediately after create. Terraform's dependency graph plus a short retry generally absorbs this; for large batches, extend `timeouts` and/or reduce `-parallelism`.
 
 ---
@@ -173,7 +173,7 @@ module "credit_analysts" {
 
 ```hcl
 module "user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "J. Doe"
   user_principal_name = "jdoe@financialpartners.com"
   password            = var.jdoe_password
@@ -187,7 +187,7 @@ Defaults applied: `account_enabled = true`, `force_password_change = true`, `dis
 
 ```hcl
 module "new_hire" {
-  source                = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source                = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name          = "Pat Newhire"
   user_principal_name   = "pat.newhire@financialpartners.com"
   password              = var.pat_initial_password
@@ -202,7 +202,7 @@ module "new_hire" {
 
 ```hcl
 module "future_hire" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Future Hire"
   user_principal_name = "future.hire@financialpartners.com"
   password            = var.future_password
@@ -217,7 +217,7 @@ Flip `account_enabled = true` on the start date — an in-place update, no recre
 
 ```hcl
 module "manager_user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Morgan Lead"
   user_principal_name = "morgan.lead@financialpartners.com"
   password            = var.morgan_password
@@ -242,7 +242,7 @@ module "manager_user" {
 
 ```hcl
 module "field_user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Sam Field"
   user_principal_name = "sam.field@financialpartners.com"
   password            = var.sam_password
@@ -264,14 +264,14 @@ module "field_user" {
 
 ```hcl
 module "boss" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Alex Director"
   user_principal_name = "alex.director@financialpartners.com"
   password            = var.alex_password
 }
 
 module "report" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Jamie Report"
   user_principal_name = "jamie.report@financialpartners.com"
   password            = var.jamie_password
@@ -285,7 +285,7 @@ module "report" {
 
 ```hcl
 module "licensed_user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Licensed User"
   user_principal_name = "licensed.user@financialpartners.com"
   password            = var.licensed_password
@@ -301,7 +301,7 @@ module "licensed_user" {
 
 ```hcl
 module "minor_user" {
-  source                     = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source                     = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name               = "Junior Saver"
   user_principal_name        = "junior.saver@financialpartners.com"
   password                   = var.junior_password
@@ -317,7 +317,7 @@ Both fields are enum-validated; pass `null` or `""` to leave unset.
 
 ```hcl
 module "casey_user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Riley Banker"
   user_principal_name = "riley.banker@financialpartners.com"
   password            = var.riley_initial_password
@@ -342,7 +342,7 @@ module "casey_user" {
 
 ```hcl
 module "hardened_user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Locked-Down User"
   user_principal_name = "locked.user@financialpartners.com"
   password            = var.locked_password
@@ -376,7 +376,7 @@ resource "random_password" "user_pw" {
 }
 
 module "rotated_user" {
-  source                = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source                = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name          = "Rotating Service Account"
   user_principal_name   = "svc-rotating@financialpartners.com"
   password              = random_password.user_pw.result
@@ -391,7 +391,7 @@ module "rotated_user" {
 
 ```hcl
 module "admin_user" {
-  source              = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source              = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   display_name        = "Taylor Admin"
   user_principal_name = "taylor.admin@financialpartners.com"
   password            = var.taylor_password
@@ -399,7 +399,7 @@ module "admin_user" {
 }
 
 module "platform_admins" {
-  source       = "git::https://github.com/microsoftexpert/tf-mod-azuread-group?ref=v1.0.0"
+  source       = "git::https://github.com/microsoftexpert/terraform-azuread-group?ref=v1.0.0"
   display_name = "Platform Admins"
   members = {
     taylor = { member_object_id = module.admin_user.object_id }
@@ -407,7 +407,7 @@ module "platform_admins" {
 }
 
 module "helpdesk_role" {
-  source       = "git::https://github.com/microsoftexpert/tf-mod-azuread-directory-role?ref=v1.0.0"
+  source       = "git::https://github.com/microsoftexpert/terraform-azuread-directory-role?ref=v1.0.0"
   display_name = "Helpdesk Administrator"
   role_assignments = {
     taylor = { principal_object_id = module.admin_user.object_id } # ← user object_id feeds role assignment
@@ -432,7 +432,7 @@ variable "users" {
 }
 
 module "team" {
-  source   = "git::https://github.com/microsoftexpert/tf-mod-azuread-user?ref=v1.0.0"
+  source   = "git::https://github.com/microsoftexpert/terraform-azuread-user?ref=v1.0.0"
   for_each = var.users
 
   display_name        = each.value.display_name
@@ -499,7 +499,7 @@ module "team" {
 
 **Account state**
 - `account_enabled` *(bool)* — Whether sign-in is enabled.
-- `user_type` *(string)* — `"Member"` for cloud-only users created here; `"Guest"` only via `tf-mod-azuread-invitation`.
+- `user_type` *(string)* — `"Member"` for cloud-only users created here; `"Guest"` only via `terraform-azuread-invitation`.
 - `creation_type` *(string)* — Account origin. `null` for a regular work/school account; `try(..., null)` guarded.
 
 **Read-only / computed**
@@ -525,7 +525,7 @@ module "team" {
 ## 🚀 Runbook
 
 ```powershell
-cd C:\GitHubCode\newazureadmodules\tf-mod-azuread-user
+cd C:\GitHubCode\newazureadmodules\terraform-azuread-user
 terraform init -backend=false
 terraform validate
 terraform fmt -check
@@ -559,8 +559,8 @@ terraform fmt -check
 - [Microsoft Graph permissions reference](https://learn.microsoft.com/graph/permissions-reference)
 - [Plan and troubleshoot UserPrincipalName changes](https://learn.microsoft.com/entra/identity/hybrid/connect/howto-troubleshoot-upn-changes)
 - [Usage location & group-based licensing](https://learn.microsoft.com/entra/identity/users/licensing-group-advanced#overview)
-- `tf-mod-azuread-group`, `tf-mod-azuread-administrative-unit`, `tf-mod-azuread-directory-role`, `tf-mod-azuread-pim-group` — primary consumers of `object_id`
-- `tf-mod-azuread-invitation` — for **guest (B2B)** users (not managed here)
+- `terraform-azuread-group`, `terraform-azuread-administrative-unit`, `terraform-azuread-directory-role`, `terraform-azuread-pim-group` — primary consumers of `object_id`
+- `terraform-azuread-invitation` — for **guest (B2B)** users (not managed here)
 
 ---
 
